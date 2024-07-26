@@ -18,7 +18,10 @@ let Archiver = require("archiver");
 
 const pkey = {
     client_email: process.env.GDRIVE_CLIENT_EMAIL,
-    private_key: process.env.GDRIVE_PRIVATE_KEY,
+    // private_key: process.env.GDRIVE_PRIVATE_KEY,
+    private_key: JSON.parse(
+        JSON.stringify(Buffer.from(process.env.GDRIVE_PRIVATE_KEY, "base64").toString().replace(/\\n/g,"\\n"))
+      )
 };
 
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
@@ -291,9 +294,17 @@ var service = {
             //     console.log("file z", resss.data);
             // })
             // .catch(console.error);
+            // let a = Buffer.from(process.env.GDRIVE_PRIVATE_KEY).toString('base64');
 
-            var list = directories.map(buildSiteObject);
-            return Promise.resolve(list);
+            console.log("base 64 decoded", pkey.private_key
+            // //     JSON.parse(
+            // //     JSON.stringify(Buffer.from(a, "base64").toString().replace(/\\n/g,"\\n"))
+            // //   )
+            )
+
+            let list = directories.map(buildSiteObject);
+            let driveLink = `https://drive.google.com/drive/folders/${process.env.GDRIVE_FOLDER_ID}`;
+            return Promise.resolve({list, driveLink});
         });
     },
 

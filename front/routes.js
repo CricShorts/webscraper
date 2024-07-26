@@ -9,7 +9,10 @@ angular.module('app').config(['$routeProvider', '$locationProvider',
 				resolve: {
 					sites: function (sites) {
 						return sites.list().$promise;
-					}
+					},
+					// dataSites: function (sites){
+					// 	return sites.customGet({ customParam: 'value' });
+					// }
 				}
 			})
 			.when('/view/:directory', {

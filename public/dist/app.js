@@ -389,7 +389,10 @@ angular.module('app').config(['$routeProvider', '$locationProvider',
 				resolve: {
 					sites: function (sites) {
 						return sites.list().$promise;
-					}
+					},
+					// dataSites: function (sites){
+					// 	return sites.customGet({ customParam: 'value' });
+					// }
 				}
 			})
 			.when('/view/:directory', {
@@ -473,7 +476,8 @@ angular.module('app').controller('CreateCtrl', function ($rootScope, $scope, $ht
 'use strict';
 
 angular.module('app').controller('ListCtrl', function ($scope, sites) {
-	$scope.sites = sites;
+	$scope.sites = sites.list;
+	$scope.driveLink = sites.driveLink;
 });
 
 'use strict';
@@ -553,9 +557,14 @@ angular.module('app').factory('progressInterceptor', ['$q', function ($q) {
 
 angular.module('app.resources').factory('sites', function ($resource) {
 	return $resource('/sites/:directory', { directory: '@directory' }, {
-		list: { method: 'GET', isArray: true },
+		list: { method: 'GET', isArray: false },
 		get: { method: 'GET' },
-		create: { method: 'POST' }
+		create: { method: 'POST' },
+		// customGet: {
+        //     method: 'GET',
+        //     url: '/sites/custom/:customParam', // Replace with your custom URL
+        //     params: { customParam: '@customParam' }
+        // }
 	});
 });
 
@@ -597,5 +606,5 @@ angular.module('app.resources').factory('userAgents', function () {
 	}
 );
 angular.module('app.templates').run(['$templateCache', function($templateCache) {$templateCache.put('sites/create.html','<div class="row">\n    <div class="col col-md-8 col-md-offset-2 form-container">\n        <h2 class="text-center">Scrape web-page</h2>\n        <form role="form" class="form-horizontal" name="scraperForm" method="post" novalidate>\n\n            <div class="form-group" ng-class="{\'has-error\': scraperForm.url.$invalid && scraperForm.url.$dirty}">\n                <div class="col-md-12">\n                    <input type="url" class="form-control" ng-model="data.url" name="url" required placeholder="http://example.com/">\n                    <p class="help-block" ng-show="scraperForm.url.$dirty && scraperForm.url.$error.required">Url is empty</p>\n                    <p class="help-block" ng-show="scraperForm.url.$dirty && scraperForm.url.$error.url">Invalid url</p>\n                </div>\n            </div>\n\n            <div class="form-group">\n                <div class="col-md-12">\n                    <div class="text-right">\n                        <a class="text-muted" href="#" ng-show="!showAdvancedOptions" ng-click="toggleAdvancedOptions()">\n                            <span>Show advanced options</span>\n                            <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>\n                        </a>\n                        <a class="text-muted" href="#" ng-show="showAdvancedOptions" ng-click="toggleAdvancedOptions()">\n                            <span>Hide advanced options</span>\n                            <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span>\n                        </a>\n                    </div>\n                    <br>\n                    <div ng-show="showAdvancedOptions">\n                        <div class="form-group">\n                            <label class="col-md-2 control-label">User-Agent:</label>\n                            <div class="col-md-10">\n                                <select class="form-control"\n                                        ng-model="data.request.headers[\'User-Agent\']"\n                                        ng-options="item.userAgent as item.title for item in userAgents">\n                                </select>\n                            </div>\n                        </div>\n                        <div class="form-group">\n                            <label class="col-md-2 control-label">Cookies:</label>\n                            <div class="col-md-10">\n                                <input type="text" class="form-control"\n                                    placeholder="key1=value1; key2=value2;"\n                                    ng-model="data.request.headers[\'Cookie\']">\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n\n            <div class="form-group">\n                <div class="col-md-8">\n                    <button class="btn btn-success btn-block" ng-click=\'add()\' ng-disabled="scraperForm.$invalid || isAdding">Go</button>\n                </div>\n                <div class="col-md-4">\n                    <button class="btn btn-default btn-block" ng-click=\'reset()\'>Reset</button>\n                </div>\n            </div>\n\n        </form>\n    </div>\n</div>\n');
-$templateCache.put('sites/list.html','<div class="row">\n    <div class="col col-md-8 col-md-offset-2">\n        <a href="https://drive.google.com/drive/folders/1D43ENdmwUo8j-qfSWi6fk4gJH__M59RF" target="_blank">Link to Google Drive</a>\n        <table class="table table-striped table-hover">\n            <tr ng-repeat="site in sites">\n                <td>{{site.directory}}</td>\n                <td class="text-right">\n                    <a href="/view/{{site.directory}}" class="btn btn-info btn-xs" title="View"><span class="glyphicon glyphicon-search"></span></a>\n                    <a href="{{site.downloadPath}}" target="_blank" class="btn btn-success btn-xs" title="Download archive"><span class="glyphicon glyphicon-download-alt"></span></a>\n                </td>\n            </tr>\n        </table>\n    </div>\n</div>\n');
+$templateCache.put('sites/list.html','<div class="row">\n    <div class="col col-md-8 col-md-offset-2">\n        <a href="{{driveLink}}" target="_blank">Link to Google Drive</a>\n        <table class="table table-striped table-hover">\n            <tr ng-repeat="site in sites">\n                <td>{{site.directory}}</td>\n                <td class="text-right">\n                    <a href="/view/{{site.directory}}" class="btn btn-info btn-xs" title="View"><span class="glyphicon glyphicon-search"></span></a>\n                    <a href="{{site.downloadPath}}" target="_blank" class="btn btn-success btn-xs" title="Download archive"><span class="glyphicon glyphicon-download-alt"></span></a>\n                </td>\n            </tr>\n        </table>\n    </div>\n</div>\n');
 $templateCache.put('sites/view.html','<div class="row" ng-if="site">\n    <div class="col col-md-8 col-md-offset-2">\n        <div class="col-md-6">\n            <a ng-href="{{site.previewPath}}" class="btn btn-primary btn-block" target="_blank">\n                <span class="glyphicon glyphicon-search"></span> Open in new tab\n            </a>\n        </div>\n        <div class="col-md-6">\n            <a href="{{site.downloadPath}}" class="btn btn-success btn-block" target="_blank">\n                <span class="glyphicon glyphicon-download-alt"></span> Download archive\n            </a>\n        </div>\n    </div>\n</div>\n<div class="row view-note">\n    <div class="col col-md-8 col-md-offset-2">\n        <p class="text-muted">\n            Note that page is opened in sandbox mode so scripts are not working.\n            To see full version of page open it in new tab.\n        </p>\n    </div>\n</div>\n<div class="row height-100-percents">\n    <div class="col col-md-8 col-md-offset-2 iframe-wrap">\n        <iframe sandbox class="iframe" ng-src="{{site.previewPath}}"></iframe>\n    </div>\n</div>\n');}]);
